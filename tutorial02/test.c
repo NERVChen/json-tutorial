@@ -21,26 +21,39 @@ static int test_pass = 0;
 #define EXPECT_EQ_INT(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%d")
 #define EXPECT_EQ_DOUBLE(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%.17g")
 
-static void test_parse_null() {
-    lept_value v;
-    v.type = LEPT_FALSE;
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "null"));
-    EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
-}
+#define TEST_LITERAL(prehub,expect,json) \
+   do{\
+      lept_value v;\
+      v.type = prehub;\
+      EXPECT_EQ_INT(LEPT_PARSE_OK,lept_parse(&v,json));\
+      EXPECT_EQ_INT(expect,lept_get_type(&v));\
+  }while(0)
 
-static void test_parse_true() {
-    lept_value v;
-    v.type = LEPT_FALSE;
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "true"));
-    EXPECT_EQ_INT(LEPT_TRUE, lept_get_type(&v));
+static void test_parse_literal() {
+	TEST_LITERAL(LEPT_FALSE, LEPT_NULL, "null");
+	TEST_LITERAL(LEPT_FALSE, LEPT_TRUE, "true");
+	TEST_LITERAL(LEPT_TRUE, LEPT_FALSE, "false");
 }
-
-static void test_parse_false() {
-    lept_value v;
-    v.type = LEPT_TRUE;
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "false"));
-    EXPECT_EQ_INT(LEPT_FALSE, lept_get_type(&v));
-}
+//static void test_parse_null() {
+//    lept_value v;
+//    v.type = LEPT_FALSE;
+//    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "null"));
+//    EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
+//}
+//
+//static void test_parse_true() {
+//    lept_value v;
+//    v.type = LEPT_FALSE;
+//    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "true"));
+//    EXPECT_EQ_INT(LEPT_TRUE, lept_get_type(&v));
+//}
+//
+//static void test_parse_false() {
+//    lept_value v;
+//    v.type = LEPT_TRUE;
+//    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "false"));
+//    EXPECT_EQ_INT(LEPT_FALSE, lept_get_type(&v));
+//}
 
 #define TEST_NUMBER(expect, json)\
     do {\
@@ -69,7 +82,10 @@ static void test_parse_number() {
     TEST_NUMBER(-1E-10, "-1E-10");
     TEST_NUMBER(1.234E+10, "1.234E+10");
     TEST_NUMBER(1.234E-10, "1.234E-10");
-    TEST_NUMBER(0.0, "1e-10000"); /* must underflow */
+    TEST_NUMBER(0.0, "1e-10000"); 
+	TEST_NUMBER(5E-324, "5E-324");
+	TEST_NUMBER(2.2250738585072009E-308, "2.2250738585072009E-308");
+	TEST_NUMBER(1.7976931348623157E+308, "1.7976931348623157E+308");/* must underflow */
 }
 
 #define TEST_ERROR(error, json)\
@@ -89,7 +105,7 @@ static void test_parse_invalid_value() {
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "nul");
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "?");
 
-#if 0
+#if 1
     /* invalid number */
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "+0");
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "+1");
@@ -105,7 +121,7 @@ static void test_parse_invalid_value() {
 static void test_parse_root_not_singular() {
     TEST_ERROR(LEPT_PARSE_ROOT_NOT_SINGULAR, "null x");
 
-#if 0
+#if 1
     /* invalid number */
     TEST_ERROR(LEPT_PARSE_ROOT_NOT_SINGULAR, "0123"); /* after zero should be '.' or nothing */
     TEST_ERROR(LEPT_PARSE_ROOT_NOT_SINGULAR, "0x0");
@@ -114,16 +130,17 @@ static void test_parse_root_not_singular() {
 }
 
 static void test_parse_number_too_big() {
-#if 0
+#if 1
     TEST_ERROR(LEPT_PARSE_NUMBER_TOO_BIG, "1e309");
     TEST_ERROR(LEPT_PARSE_NUMBER_TOO_BIG, "-1e309");
 #endif
 }
 
 static void test_parse() {
-    test_parse_null();
+   /* test_parse_null();
     test_parse_true();
-    test_parse_false();
+    test_parse_false();*/
+	test_parse_literal();
     test_parse_number();
     test_parse_expect_value();
     test_parse_invalid_value();
